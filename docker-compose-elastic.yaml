@@ -1,0 +1,154 @@
+version: "3.4"
+
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    ports:
+      - ${ES_PORT}:9200
+    environment:
+      - node.name=es01
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=es01,es02,es03,es04
+      - discovery.seed_hosts=es02,es03,es04
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.ml.enabled=false
+      - xpack.security.enabled=false
+      #- cluster.routing.allocation.total_shards_per_node=80
+      - thread_pool.search.queue_size=5000
+      - logger.org.elasticsearch.discovery="ERROR"
+      - "ES_JAVA_OPTS=-Xms${ELASTIC_MEMORY_SIZE} -Xmx${ELASTIC_MEMORY_SIZE}"
+    #mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: curl -s http://es01:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 50
+
+  es02:
+    depends_on:
+      - es01
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - esdata02:/usr/share/elasticsearch/data
+    environment:
+      - node.name=es02
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=es01,es02,es03,es04
+      - discovery.seed_hosts=es01,es03,es04
+      - xpack.ml.enabled=false
+      - xpack.security.enabled=false
+      #- cluster.routing.allocation.total_shards_per_node=80
+      - thread_pool.search.queue_size=5000
+      - logger.org.elasticsearch.discovery="ERROR"
+      - "ES_JAVA_OPTS=-Xms${ELASTIC_MEMORY_SIZE2} -Xmx${ELASTIC_MEMORY_SIZE2}"
+    #mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: curl -s http://es02:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 50
+
+  es03:
+    depends_on:
+      - es02
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - esdata04:/usr/share/elasticsearch/data
+    environment:
+      - node.name=es03
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=es01,es02,es03,es04
+      - discovery.seed_hosts=es01,es02,es04
+      - xpack.ml.enabled=false
+      - xpack.security.enabled=false
+      #- cluster.routing.allocation.total_shards_per_node=80
+      - thread_pool.search.queue_size=5000
+      - logger.org.elasticsearch.discovery="ERROR"
+      - "ES_JAVA_OPTS=-Xms${ELASTIC_MEMORY_SIZE2} -Xmx${ELASTIC_MEMORY_SIZE2}"
+    #mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: curl -s http://es03:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 50
+
+  es04:
+    depends_on:
+      - es03
+    image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
+    volumes:
+      - esdata03:/usr/share/elasticsearch/data
+    environment:
+      - node.name=es04
+      - cluster.name=${CLUSTER_NAME}
+      - cluster.initial_master_nodes=es01,es02,es03,es04
+      - discovery.seed_hosts=es01,es02,es03
+      - xpack.ml.enabled=false
+      - xpack.security.enabled=false
+      #- cluster.routing.allocation.total_shards_per_node=80
+      - thread_pool.search.queue_size=5000
+      - logger.org.elasticsearch.discovery="ERROR"
+      - "ES_JAVA_OPTS=-Xms${ELASTIC_MEMORY_SIZE2} -Xmx${ELASTIC_MEMORY_SIZE2}"
+    #mem_limit: ${MEM_LIMIT}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: curl -s http://es04:9200 >/dev/null || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 50
+
+volumes:
+  esdata01:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/opencti/esdata1
+  esdata02:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/opencti/esdata2
+  esdata03:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/opencti/esdata3
+  esdata04:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/opencti/esdata4
+
